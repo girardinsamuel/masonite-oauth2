@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://banners.beyondco.de/Socialite.png?theme=light&packageManager=pip+install&packageName=masonite-socialite&pattern=topography&style=style_1&description=Social%20authentication%20for%20your%20apps%20(OAuth%202)&md=1&showWatermark=1&fontSize=100px&images=https%3A%2F%2Fgblobscdn.gitbook.com%2Fspaces%2F-L9uc-9XAlqhXkBwrLMA%2Favatar.png">
+    <img src="https://banners.beyondco.de/Masonite%20Socialite.png?theme=light&packageManager=pip+install&packageName=masonite-socialite&pattern=topography&style=style_1&description=Social%20authentication%20for%20your%20apps%20(OAuth%202)&md=1&showWatermark=1&fontSize=100px&images=https%3A%2F%2Fgblobscdn.gitbook.com%2Fspaces%2F-L9uc-9XAlqhXkBwrLMA%2Favatar.png">
 </p>
 <p align="center">
   <a href="https://docs.masoniteproject.com">
@@ -83,6 +83,4 @@ Please read the [Contributing Documentation](CONTRIBUTING.md) here.
 
 ## License
 
-
 Masonite Socialite is open-sourced software licensed under the [MIT license](LICENSE).
-
