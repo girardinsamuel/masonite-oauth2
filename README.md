@@ -16,6 +16,8 @@
 
 ## Introduction
 
+This is WIP not usable for the moment and will be based on https://github.com/hellomasonite/masonite-socialite.
+
 Social authentication for your apps (OAuth 2)
 
 ## Features
