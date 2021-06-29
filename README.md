@@ -73,7 +73,20 @@ python craft publish SocialiteProvider
 
 ## Usage
 
-_Explain how to use your package_
+```python
+from masonite.controllers import Controller
+from masonite.socialite import Socialite
+
+class YourController(Controller):
+
+    def auth(self):
+        return Socialite.driver("github").redirect()
+
+    def callback(self):
+        user = Socialite.driver("github").user()
+        # you now have a user object with data and a token
+        return vars(user)
+```
 
 ## Contributing
 

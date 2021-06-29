@@ -17,6 +17,8 @@ class BaseDriver:
 
     def get_absolute_redirect_uri(self):
         redirect_route_or_url = self.options.get("redirect")
+        if not redirect_route_or_url:
+            raise Exception("You should specify a redirect route name or URI")
         # convert to route with name
         try:
             redirect_url = self.application.make("router").route(redirect_route_or_url)
@@ -30,6 +32,28 @@ class BaseDriver:
         return OAuth2Session(
             client_id=self.options.get("client_id"), redirect_uri=self.get_absolute_redirect_uri()
         )
+
+    def redirect(self):
+        client = self.get_client()
+        authorization_url, state = client.authorization_url(self.get_auth_url())
+        self.application.make("session").set("state", state)
+        return self.application.make("response").redirect(location=authorization_url)
+
+    def get_token(self):
+        code = self.application.make("request").input("code")
+        client = self.get_client()
+        response = client.fetch_token(
+            self.get_token_url(),
+            client_secret=self.options.get("client_secret"),
+            code=code,
+        )
+        # token_type = response.get("token_type")
+        # scope = response.get("scope")
+        # response = client.get(
+        #     "https://api.github.com/user", headers={"Authorization": f"token {token}"}
+        # )
+        token = response.get("access_token")
+        return client, token
 
     def stateless(self):
         self._is_stateless = True

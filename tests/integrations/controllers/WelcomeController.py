@@ -16,4 +16,5 @@ class WelcomeController(Controller):
 
     def callback(self):
         user = Socialite.driver("gitlab").user()
+        # you now have a user object with data and a token
         return vars(user)
