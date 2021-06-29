@@ -1,7 +1,8 @@
+import os
 from masonite.foundation import Application, Kernel
+
 from tests.integrations.config.providers import PROVIDERS
 from tests.integrations.app.Kernel import Kernel as ApplicationKernel
-import os
 
 
 """Start The Application Instance."""

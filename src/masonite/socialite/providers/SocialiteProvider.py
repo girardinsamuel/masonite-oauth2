@@ -1,7 +1,10 @@
 """A SocialiteProvider Service Provider."""
-
 from masonite.providers import Provider
 from masonite.socialite.commands.InstallCommand import InstallCommand
+from masonite.utils.structures import load
+
+from ..Socialite import Socialite
+from ..drivers import GithubDriver, GitlabDriver
 
 
 class SocialiteProvider(Provider):
@@ -13,6 +16,13 @@ class SocialiteProvider(Provider):
     def register(self):
         """Register objects into the Service Container."""
         self.application.make("commands").add(InstallCommand())
+        self.application.bind("config.socialite", "masonite.socialite.config.socialite")
+        socialite = Socialite(self.application).set_configuration(
+            load(self.application.make("config.socialite")).DRIVERS
+        )
+        socialite.add_driver("github", GithubDriver(self.application))
+        socialite.add_driver("gitlab", GitlabDriver(self.application))
+        self.application.bind("socialite", socialite)
 
     def boot(self):
         """Boots services required by the container."""

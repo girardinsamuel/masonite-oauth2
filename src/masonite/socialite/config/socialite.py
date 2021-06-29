@@ -1,12 +1,15 @@
 """Socialite Settings"""
+from masonite.environment import env
 
-"""
-|--------------------------------------------------------------------------
-| A Heading of The Setting Being Set
-|--------------------------------------------------------------------------
-|
-| A quick description
-|
-"""
-
-SETTING = "some value"
+DRIVERS = {
+    "github": {
+        "client_id": env("GITHUB_CLIENT_ID"),
+        "client_secret": env("GITHUB_CLIENT_SECRET"),
+        "redirect": "auth.callback",
+    },
+    "gitlab": {
+        "client_id": env("GITLAB_CLIENT_ID"),
+        "client_secret": env("GITLAB_CLIENT_SECRET"),
+        "redirect": "/auth/callback",
+    },
+}

@@ -1,13 +1,12 @@
-import os
 from masonite.foundation import response_handler
 from masonite.storage import StorageCapsule
 from masonite.auth import Sign
+import os
 from masonite.environment import LoadEnvironment
 from masonite.utils.structures import load
 from masonite.middleware import (
     VerifyCsrfToken,
     SessionMiddleware,
-    EncryptCookies,
 )
 from masonite.routes import Route
 from masonite.utils.structures import load_routes
@@ -16,7 +15,7 @@ from masonite.utils.structures import load_routes
 class Kernel:
 
     http_middleware = []
-    route_middleware = {"web": [EncryptCookies, SessionMiddleware, VerifyCsrfToken]}
+    route_middleware = {"web": [SessionMiddleware, VerifyCsrfToken]}
 
     def __init__(self, app):
         self.application = app
@@ -41,7 +40,7 @@ class Kernel:
         self.application.bind("routes.web", "tests.integrations.web")
 
         self.application.make("router").add(
-            Route.group(load_routes(self.application.make("routes.web")), middleware="web")
+            Route.group(load_routes(self.application.make("routes.web")), middleware=["web"])
         )
 
     def register_middleware(self):
@@ -57,6 +56,7 @@ class Kernel:
         self.application.bind("config.cache", "tests.integrations.config.cache")
         self.application.bind("config.broadcast", "tests.integrations.config.broadcast")
         self.application.bind("config.auth", "tests.integrations.config.auth")
+        self.application.bind("config.notification", "tests.integrations.config.notification")
         self.application.bind("config.filesystem", "tests.integrations.config.filesystem")
 
         self.application.bind("base_url", "http://localhost:8000")

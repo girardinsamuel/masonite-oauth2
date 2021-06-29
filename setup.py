@@ -11,6 +11,8 @@ setup(
     version="0.0.1",
     packages=[
         "masonite.socialite",
+        "masonite.socialite.config",
+        "masonite.socialite.drivers",
         "masonite.socialite.providers",
         "masonite.socialite.controllers",
         "masonite.socialite.commands",
