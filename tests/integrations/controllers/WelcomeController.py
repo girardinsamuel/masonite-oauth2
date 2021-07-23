@@ -12,10 +12,10 @@ class WelcomeController(Controller):
         return view.render("base")
 
     def auth(self):
-        return Socialite.driver("google").redirect()
+        return Socialite.driver("github").redirect()
 
     def callback(self):
-        user = Socialite.driver("google").user()
-        user2 = Socialite.driver("google").user_from_token(user.token)
+        user = Socialite.driver("github").user()
+        # user2 = Socialite.driver("github").user_from_token(user.token)
         # you now have a user object with data and a token
         return vars(user)

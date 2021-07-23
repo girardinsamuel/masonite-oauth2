@@ -22,8 +22,7 @@ Social authentication for your apps (OAuth 2)
 
 ## Features
 
-- _Add your package main features here_
-- _and here_
+- Officially supports GitHub, GitLab, BitBucket and Google providers
 
 ## Official Masonite Documentation
 
