@@ -71,6 +71,9 @@ class BaseDriver:
         self._scopes = scopes_list
         return self
 
+    def has_scope(self, scope):
+        return scope in self._scopes
+
     def with_data(self, data):
         """Add optional parameters in the redirect request that the provider might support.
         data should be a dict that will be converted into URL GET params."""
@@ -95,8 +98,18 @@ class BaseDriver:
     def get_user_url(self):
         raise NotImplementedError()
 
+    def get_email_url(self):
+        raise NotImplementedError()
+
     def get_request_options(self, *args):
         raise NotImplementedError()
+
+    def get_email_by_token(self, token):
+        """E-mail is often not send directly with user info, a subsequent request needs to be
+        made in order to fetch user e-mail (if scopes allow it)."""
+        response = requests.get(self.get_email_url(), **self.get_request_options(token))
+        email_data = json.loads(response.content.decode("utf-8"))
+        return email_data
 
     def user(self):
         if self.has_invalid_state():

@@ -18,7 +18,7 @@ class GitlabDriver(BaseDriver):
         return "https://gitlab.com/api/v4/user"
 
     def get_request_options(self, token):
-        return {"headers": {f"Authorization: Bearer {token}"}}
+        return {"headers": {"Authorization": f"Bearer {token}"}}
 
     def user(self):
         user_data, token = super().user()

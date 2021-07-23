@@ -12,10 +12,10 @@ class WelcomeController(Controller):
         return view.render("base")
 
     def auth(self):
-        return Socialite.driver("bitbucket").redirect()
+        return Socialite.driver("gitlab").redirect()
 
     def callback(self):
-        user = Socialite.driver("bitbucket").user()
-        # user2 = Socialite.driver("github").user_from_token(user.token)
+        user = Socialite.driver("gitlab").user()
+        user2 = Socialite.driver("gitlab").user_from_token(user.token)
         # you now have a user object with data and a token
         return vars(user)
