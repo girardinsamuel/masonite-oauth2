@@ -1,21 +1,20 @@
-import json
-
 from .BaseDriver import BaseDriver
 from ..OAuthUser import OAuthUser
 
 
-class GitlabDriver(BaseDriver):
+class BitbucketDriver(BaseDriver):
     def get_default_scopes(self):
-        return ["read_user"]
+        # https://developer.atlassian.com/cloud/bitbucket/bitbucket-cloud-rest-api-scopes/
+        return ["email"]
 
     def get_auth_url(self):
-        return "https://gitlab.com/oauth/authorize"
+        return "https://bitbucket.org/site/oauth2/authorize"
 
     def get_token_url(self):
-        return "https://gitlab.com/oauth/token"
+        return "https://bitbucket.org/site/oauth2/access_token"
 
     def get_user_url(self):
-        return "https://gitlab.com/api/v4/user"
+        return "https://api.bitbucket.org/2.0/user"
 
     def get_request_options(self, token):
         return {"headers": {f"Authorization: Bearer {token}"}}
@@ -27,11 +26,11 @@ class GitlabDriver(BaseDriver):
             .set_token(token)
             .build(
                 {
-                    "id": user_data["id"],
+                    "id": user_data["uuid"],
                     "nickname": user_data["username"],
-                    "name": user_data["name"],
-                    "email": user_data["email"],
-                    "avatar": user_data["avatar_url"],
+                    "name": user_data["display_name"],
+                    "email": user_data.get("email", ""),
+                    "avatar": user_data["links"]["avatar"]["href"],
                 }
             )
         )
@@ -44,11 +43,11 @@ class GitlabDriver(BaseDriver):
             .set_token(token)
             .build(
                 {
-                    "id": user_data["id"],
+                    "id": user_data["uuid"],
                     "nickname": user_data["username"],
-                    "name": user_data["name"],
-                    "email": user_data["email"],
-                    "avatar": user_data["avatar_url"],
+                    "name": user_data["display_name"],
+                    "email": user_data.get("email", ""),
+                    "avatar": user_data["links"]["avatar"]["href"],
                 }
             )
         )

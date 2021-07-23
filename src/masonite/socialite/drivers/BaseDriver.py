@@ -1,4 +1,7 @@
+import requests
+import json
 from os.path import join
+from urllib.parse import urlencode
 from requests_oauthlib import OAuth2Session
 from masonite.exceptions import RouteNotFoundException
 
@@ -9,7 +12,8 @@ class BaseDriver:
         self.options = {}
 
         self._is_stateless = False
-        self._scopes = []
+        self._scopes = self.get_default_scopes()
+        self._data = {}
 
     def set_options(self, options):
         self.options = options
@@ -29,13 +33,18 @@ class BaseDriver:
         return join("http://localhost:8000", redirect_url.lstrip("/"))
 
     def get_client(self):
+        self._scopes.sort()
         return OAuth2Session(
-            client_id=self.options.get("client_id"), redirect_uri=self.get_absolute_redirect_uri()
+            client_id=self.options.get("client_id"),
+            redirect_uri=self.get_absolute_redirect_uri(),
+            scope=self._scopes,
         )
 
     def redirect(self):
         client = self.get_client()
         authorization_url, state = client.authorization_url(self.get_auth_url())
+        # add optional parameters
+        authorization_url += "&" + urlencode(self._data)
         self.application.make("session").set("state", state)
         return self.application.make("response").redirect(location=authorization_url)
 
@@ -47,11 +56,6 @@ class BaseDriver:
             client_secret=self.options.get("client_secret"),
             code=code,
         )
-        # token_type = response.get("token_type")
-        # scope = response.get("scope")
-        # response = client.get(
-        #     "https://api.github.com/user", headers={"Authorization": f"token {token}"}
-        # )
         token = response.get("access_token")
         return client, token
 
@@ -63,11 +67,24 @@ class BaseDriver:
         self._scopes.extend(scopes_list)
         return self
 
+    def set_scopes(self, scopes_list):
+        self._scopes = scopes_list
+        return self
+
+    def with_data(self, data):
+        """Add optional parameters in the redirect request that the provider might support.
+        data should be a dict that will be converted into URL GET params."""
+        self._data = data
+        return self
+
     def has_invalid_state(self):
         if self._is_stateless:
             return False
         state = self.application.make("session").get("state")
         return state != self.application.make("request").input("state")
+
+    def get_default_scopes(self):
+        return []
 
     def get_auth_url(self):
         raise NotImplementedError()
@@ -75,8 +92,21 @@ class BaseDriver:
     def get_token_url(self):
         raise NotImplementedError()
 
-    def redirect(self):
+    def get_user_url(self):
+        raise NotImplementedError()
+
+    def get_request_options(self, *args):
         raise NotImplementedError()
 
     def user(self):
-        raise NotImplementedError()
+        if self.has_invalid_state():
+            raise Exception("Invalid state")
+        client, token = self.get_token()
+        response = client.get(self.get_user_url())
+        user_data = json.loads(response.content.decode("utf-8"))
+        return user_data, token
+
+    def user_from_token(self, token):
+        response = requests.get(self.get_user_url(), **self.get_request_options(token))
+        user_data = json.loads(response.content.decode("utf-8"))
+        return user_data
