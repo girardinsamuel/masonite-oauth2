@@ -1,5 +1,3 @@
-import json
-
 from .BaseDriver import BaseDriver
 from ..OAuthUser import OAuthUser
 

@@ -27,4 +27,9 @@ DRIVERS = {
         "client_secret": env("APPLE_CLIENT_SECRET"),
         "redirect": "/auth/callback/apple",
     },
+    "facebook": {
+        "client_id": env("FACEBOOK_CLIENT_ID"),
+        "client_secret": env("FACEBOOK_CLIENT_SECRET"),
+        "redirect": "/auth/callback/facebook",
+    },
 }

@@ -6,6 +6,7 @@ from masonite.environment import LoadEnvironment
 from masonite.utils.structures import load
 from masonite.middleware import (
     VerifyCsrfToken,
+    EncryptCookies,
     SessionMiddleware,
 )
 from masonite.routes import Route
@@ -14,7 +15,7 @@ from masonite.utils.structures import load_routes
 
 class Kernel:
 
-    http_middleware = []
+    http_middleware = [EncryptCookies]
     route_middleware = {"web": [SessionMiddleware, VerifyCsrfToken]}
 
     def __init__(self, app):

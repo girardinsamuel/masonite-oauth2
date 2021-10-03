@@ -11,6 +11,13 @@
       This is a test project for developing your package:
       <strong>masonite-socialite</strong>
     </p>
-    <a href="{{ route('auth.redirect') }}">Connect with ?</a>
+    <div style="display: flex; flex-direction:column;">
+      <a href="{{ route('auth.redirect', {'provider': 'github'}) }}">Connect with GitHub</a>
+      <a href="{{ route('auth.redirect', {'provider': 'gitlab'}) }}">Connect with GitLab</a>
+      <a href="{{ route('auth.redirect', {'provider': 'google'}) }}">Connect with Google</a>
+      <a href="{{ route('auth.redirect', {'provider': 'facebook'}) }}">Connect with Facebook</a>
+      <a href="{{ route('auth.redirect', {'provider': 'bitbucket'}) }}">Connect with BitBucket</a>
+      <a href="{{ route('auth.redirect', {'provider': 'apple'}) }}">Connect with Apple</a>
+    </div>
   </body>
 </html>

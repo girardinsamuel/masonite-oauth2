@@ -132,6 +132,7 @@ Socialite providers have default scopes used when redirecting to OAuth provider 
 - Gitlab: `read_user`
 - Google: `openid`, `profile`, `email`
 - Apple: `name`, `email`
+- Facebook: `email`
 
 You can add new scopes in the redirect request by using `scopes()` method (merged with default scopes):
 

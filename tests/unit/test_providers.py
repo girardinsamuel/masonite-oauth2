@@ -78,3 +78,16 @@ class TestProviders(TestCase):
         assert data.netloc == "bitbucket.org"
         assert redirect_uri == "http://localhost:8000/auth/callback/bitbucket"
         response.assertSessionHas("state", state)
+
+    def test_facebook(self):
+        response = self.get("/auth/redirect/facebook").assertRedirect()
+        redirect_url = response.response.header("Location")
+        data = urlparse(redirect_url)
+        redirect_params = parse_qs(data.query)
+        redirect_uri = redirect_params.get("redirect_uri")[0]
+        state = redirect_params.get("state")[0]
+        assert data.netloc == "www.facebook.com"
+        assert redirect_uri == "http://localhost:8000/auth/callback/facebook"
+        response.assertSessionHas("state", state)
+        provider_response = requests.get(redirect_url)
+        assert provider_response.status_code == 200

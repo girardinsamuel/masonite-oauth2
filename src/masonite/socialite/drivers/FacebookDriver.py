@@ -2,21 +2,24 @@ from .BaseDriver import BaseDriver
 from ..OAuthUser import OAuthUser
 
 
-class GitlabDriver(BaseDriver):
+class FacebookDriver(BaseDriver):
     def get_default_scopes(self):
-        return ["read_user"]
+        return ["email"]
 
     def get_auth_url(self):
-        return "https://gitlab.com/oauth/authorize"
+        return "https://www.facebook.com/dialog/oauth"
 
     def get_token_url(self):
-        return "https://gitlab.com/oauth/token"
+        return "https://graph.facebook.com/oauth/access_token"
 
     def get_user_url(self):
-        return "https://gitlab.com/api/v4/user"
+        return "https://graph.facebook.com/me?"
 
     def get_request_options(self, token):
-        return {"headers": {"Authorization": f"Bearer {token}"}}
+        return {
+            "headers": {"Authorization": f"Bearer {token}", "Accept": "application/json"},
+            "query": {"prettyPrint": "false"},
+        }
 
     def user(self):
         user_data, token = super().user()
@@ -25,11 +28,11 @@ class GitlabDriver(BaseDriver):
             .set_token(token)
             .build(
                 {
-                    "id": user_data["id"],
-                    "nickname": user_data["username"],
+                    "id": user_data["sub"],
+                    "nickname": user_data["nickname"],
                     "name": user_data["name"],
                     "email": user_data["email"],
-                    "avatar": user_data["avatar_url"],
+                    "avatar": user_data["picture"],
                 }
             )
         )
@@ -42,11 +45,11 @@ class GitlabDriver(BaseDriver):
             .set_token(token)
             .build(
                 {
-                    "id": user_data["id"],
-                    "nickname": user_data["username"],
+                    "id": user_data["sub"],
+                    "nickname": user_data["nickname"],
                     "name": user_data["name"],
                     "email": user_data["email"],
-                    "avatar": user_data["avatar_url"],
+                    "avatar": user_data["picture"],
                 }
             )
         )

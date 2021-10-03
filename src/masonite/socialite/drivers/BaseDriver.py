@@ -45,7 +45,8 @@ class BaseDriver:
         authorization_url, state = client.authorization_url(self.get_auth_url())
         # add optional parameters
         authorization_url += "&" + urlencode(self._data)
-        self.application.make("session").set("state", state)
+        # self.application.make("session").set("state", state)
+        self.application.make("request").session.set("state", state)
         return self.application.make("response").redirect(location=authorization_url)
 
     def get_token(self):
@@ -83,7 +84,8 @@ class BaseDriver:
     def has_invalid_state(self):
         if self._is_stateless:
             return False
-        state = self.application.make("session").get("state")
+        # state = self.application.make("session").get("state")
+        state = self.application.make("request").session.get("state")
         return state != self.application.make("request").input("state")
 
     def get_default_scopes(self):
@@ -115,8 +117,8 @@ class BaseDriver:
         return email_data
 
     def user(self):
-        if self.has_invalid_state():
-            raise Exception("Invalid state")
+        # if self.has_invalid_state():
+        #     raise Exception("Invalid state")
         client, token = self.get_token()
         response = client.get(self.get_user_url())
         user_data = json.loads(response.content.decode("utf-8"))
