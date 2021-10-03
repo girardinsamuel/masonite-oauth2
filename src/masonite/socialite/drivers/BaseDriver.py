@@ -1,9 +1,9 @@
 import requests
 import json
-from os.path import join
 from urllib.parse import urlencode
 from requests_oauthlib import OAuth2Session
 from masonite.exceptions import RouteNotFoundException
+from masonite.facades import Url
 
 
 class BaseDriver:
@@ -28,9 +28,7 @@ class BaseDriver:
             redirect_url = self.application.make("router").route(redirect_route_or_url)
         except RouteNotFoundException:
             redirect_url = redirect_route_or_url
-
-        # TODO: make abs path => how ? add helper in Masonite and APP_URL env variable ?
-        return join("http://localhost:8000", redirect_url.lstrip("/"))
+        return Url.url(redirect_url.lstrip("/"))
 
     def get_client(self):
         self._scopes.sort()
