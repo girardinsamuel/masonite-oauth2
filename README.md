@@ -16,13 +16,11 @@
 
 ## Introduction
 
-This is WIP not usable for the moment and will be based on https://github.com/hellomasonite/masonite-socialite.
-
-Social authentication for your apps (OAuth 2)
+Social authentication for your Masonite app (OAuth 2).
 
 ## Features
 
-- Officially supports GitHub, GitLab, BitBucket and Google providers
+- Officially supports GitHub, GitLab, BitBucket, Google and Apple providers
 
 ## Official Masonite Documentation
 
@@ -50,15 +48,13 @@ from masonite.socialite import SocialiteProvider
 # ...
 PROVIDERS = [
     # ...
-
     # Third Party Providers
     SocialiteProvider,
-
     # ...
 ]
 ```
 
-Then install OR publish the required package files (configuration, views ...):
+Then install OR publish the configuration file:
 
 ```bash
 python craft socialite:install
@@ -70,10 +66,31 @@ OR (depending on your preferences)
 python craft publish SocialiteProvider
 ```
 
-## Usage
+Finally you will need to add credentials for the OAuth providers your application utilizes.
 
 ```python
-from masonite.controllers import Controller
+# config/auth.py
+DRIVERS = {
+  "github": {
+    "client_id": env("GITHUB_CLIENT_ID"),
+    "client_secret": env("GITHUB_CLIENT_SECRET"),
+    "redirect": "auth.callback",
+  }
+}
+```
+
+`redirect` can be a route name or a path.
+
+## Usage
+
+To authenticate users using an OAuth provider, you will need two routes: one for redirecting the user to the OAuth provider, and another for receiving the callback from the provider after authentication.
+
+In your controller, you can then easily access `Socialite` facade methods:
+
+- `redirect()` is redirecting to the OAuth endpoint provider
+- `user()` is the route callback the user will be redirected to after entering its credentials through the OAuth provider screen. This method is returning a `OAuthUser` instance containing user informations.
+
+```python
 from masonite.socialite import Socialite
 
 class YourController(Controller):
@@ -84,16 +101,72 @@ class YourController(Controller):
     def callback(self):
         user = Socialite.driver("github").user()
         # you now have a user object with data and a token
-        return vars(user)
+```
+
+### Get user data
+
+When retrieving user data with `user()` method, you will get a `OAuthUser` with the following
+fields:
+
+- id
+- name
+- nickname
+- email
+- avatar
+- token
+
+### Get user data from a token
+
+If you already have a valid access token for a user, you can retrieve user data using `user_from_token()`:
+
+```python
+user = Socialite.driver("github").user_from_token(token)
+```
+
+### Scopes
+
+Socialite providers have default scopes used when redirecting to OAuth provider screen:
+
+- GitHub: `user:email`
+- BitBucket: `email`
+- Gitlab: `read_user`
+- Google: `openid`, `profile`, `email`
+- Apple: `name`, `email`
+
+You can add new scopes in the redirect request by using `scopes()` method (merged with default scopes):
+
+```python
+user = Socialite.driver("github").scopes(["admin:org", "read:discussion"]).redirect()
+# scopes will be: user:email, admin:org, read:discussion
+```
+
+You can override all scopes in the redirect request by using `set_scopes()`method:
+
+```python
+user = Socialite.driver("github").set_scopes(["user:email", "user:follow"]).redirect()
+# scopes will be: user:email, user:follow
+```
+
+### Optional parameters
+
+Some OAuth providers support optional parameters. To include those in the redirect request, you can use `with_data()` method.
+
+```python
+return Socialite.driver("github").with_data({"key": "value"})
 ```
 
 ## Contributing
 
 Please read the [Contributing Documentation](CONTRIBUTING.md) here.
+Feel free to open a PR to add a new OAuth 2.0 provider 😀 !
 
 ## Maintainers
 
 - [Samuel Girardin](https://www.github.com/girardinsamuel)
+
+## Credits
+
+Based on non maintained package https://github.com/hellomasonite/masonite-socialite.
 
 ## License
 

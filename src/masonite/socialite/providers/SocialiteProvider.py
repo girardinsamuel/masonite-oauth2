@@ -4,7 +4,7 @@ from masonite.socialite.commands.InstallCommand import InstallCommand
 from masonite.utils.structures import load
 
 from ..Socialite import Socialite
-from ..drivers import GithubDriver, GitlabDriver, BitbucketDriver, GoogleDriver
+from ..drivers import GithubDriver, GitlabDriver, BitbucketDriver, GoogleDriver, AppleDriver
 
 
 class SocialiteProvider(Provider):
@@ -24,6 +24,7 @@ class SocialiteProvider(Provider):
         socialite.add_driver("gitlab", GitlabDriver(self.application))
         socialite.add_driver("bitbucket", BitbucketDriver(self.application))
         socialite.add_driver("google", GoogleDriver(self.application))
+        socialite.add_driver("apple", AppleDriver(self.application))
         self.application.bind("socialite", socialite)
 
     def boot(self):

@@ -89,6 +89,9 @@ class BaseDriver:
     def get_default_scopes(self):
         return []
 
+    def reset_scopes(self):
+        self._scopes = self.get_default_scopes()
+
     def get_auth_url(self):
         raise NotImplementedError()
 
