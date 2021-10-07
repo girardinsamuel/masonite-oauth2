@@ -28,7 +28,7 @@ class BaseDriver:
             redirect_url = self.application.make("router").route(redirect_route_or_url)
         except RouteNotFoundException:
             redirect_url = redirect_route_or_url
-        return Url.url(redirect_url.lstrip("/"))
+        return Url.url(redirect_url)
 
     def get_client(self):
         self._scopes.sort()
