@@ -20,7 +20,7 @@ Social authentication for your Masonite app (OAuth 2).
 
 ## Features
 
-- Officially supports GitHub, GitLab, BitBucket, Google and Apple providers
+- Officially supports GitHub, GitLab, BitBucket, Google, Apple and Facebook providers
 
 ## Official Masonite Documentation
 

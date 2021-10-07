@@ -1,22 +1,27 @@
+import os
+
 from masonite.foundation import response_handler
 from masonite.storage import StorageCapsule
 from masonite.auth import Sign
-import os
 from masonite.environment import LoadEnvironment
 from masonite.utils.structures import load
 from masonite.middleware import (
-    VerifyCsrfToken,
-    EncryptCookies,
     SessionMiddleware,
+    EncryptCookies,
+    LoadUserMiddleware,
 )
 from masonite.routes import Route
-from masonite.utils.structures import load_routes
+from masonite.configuration.Configuration import Configuration
+from masonite.configuration.helpers import config
 
 
 class Kernel:
 
     http_middleware = [EncryptCookies]
-    route_middleware = {"web": [SessionMiddleware, VerifyCsrfToken]}
+
+    route_middleware = {
+        "web": [SessionMiddleware, LoadUserMiddleware],
+    }
 
     def __init__(self, app):
         self.application = app
@@ -25,10 +30,9 @@ class Kernel:
         # Register routes
         self.load_environment()
         self.register_configurations()
-        self.register_routes()
         self.register_middleware()
+        self.register_routes()
         self.register_database()
-        self.register_controllers()
         self.register_templates()
         self.register_storage()
 
@@ -37,53 +41,44 @@ class Kernel:
 
     def register_routes(self):
         Route.set_controller_module_location(self.application.make("controller.location"))
-
-        self.application.bind("routes.web", "tests.integrations.web")
-
         self.application.make("router").add(
-            Route.group(load_routes(self.application.make("routes.web")), middleware=["web"])
+            Route.group(load("tests/integrations/web", "ROUTES", []), middleware=["web"])
         )
 
     def register_middleware(self):
         self.application.make("middleware").add(self.route_middleware).add(self.http_middleware)
 
     def register_configurations(self):
-        self.application.bind("config.application", "tests.integrations.config.application")
-        self.application.bind("config.mail", "tests.integrations.config.mail")
-        self.application.bind("config.session", "tests.integrations.config.session")
-        self.application.bind("config.queue", "tests.integrations.config.queue")
-        self.application.bind("config.database", "tests.integrations.config.database")
+        # load configuration
         self.application.bind("config.location", "tests/integrations/config")
-        self.application.bind("config.cache", "tests.integrations.config.cache")
-        self.application.bind("config.broadcast", "tests.integrations.config.broadcast")
-        self.application.bind("config.auth", "tests.integrations.config.auth")
-        self.application.bind("config.notification", "tests.integrations.config.notification")
-        self.application.bind("config.filesystem", "tests.integrations.config.filesystem")
-
-        self.application.bind("base_url", "http://localhost:8000")
-
+        configuration = Configuration(self.application)
+        configuration.load()
+        self.application.bind("config", configuration)
+        # set locations
+        self.application.bind("controller.location", "tests/integrations/controllers")
         self.application.bind("jobs.location", "tests/integrations/jobs")
+        self.application.bind("providers.location", "tests/integrations/providers")
         self.application.bind("mailables.location", "tests/integrations/mailables")
-        self.application.bind("server.runner", "masonite.commands.ServeCommand.main")
+        self.application.bind("listeners.location", "tests/integrations/listeners")
+        self.application.bind("validation.location", "tests/integrations/validation")
+        self.application.bind("notifications.location", "tests/integrations/notifications")
+        self.application.bind("events.location", "tests/integrations/events")
+        self.application.bind("tasks.location", "tests/integrations/tasks")
 
-        key = load(self.application.make("config.application")).KEY
+        self.application.bind("server.runner", "masonite.commands.ServeCommand.main")
+        key = config("application.key")
         self.application.bind("key", key)
         self.application.bind("sign", Sign(key))
 
-    def register_controllers(self):
-        self.application.bind("controller.location", "tests.integrations.controllers")
-
     def register_templates(self):
-        self.application.bind("views.location", "tests/integrations/templates")
+        self.application.bind("views.location", "tests/integrations/templates/")
 
     def register_database(self):
         from masoniteorm.query import QueryBuilder
 
         self.application.bind(
             "builder",
-            QueryBuilder(
-                connection_details=load(self.application.make("config.database")).DATABASES
-            ),
+            QueryBuilder(connection_details=config("database.databases")),
         )
 
         self.application.bind("migrations.location", "tests/integrations/databases/migrations")
@@ -98,10 +93,10 @@ class Kernel:
         storage.add_storage_assets(
             {
                 # folder          # template alias
-                "tests/integrations/storage/static": "static/",
-                "tests/integrations/storage/compiled": "static/",
-                "tests/integrations/storage/uploads": "static/",
-                "tests/integrations/storage/public": "/",
+                "storage/static": "static/",
+                "storage/compiled": "static/",
+                "storage/uploads": "static/",
+                "storage/public": "/",
             }
         )
         self.application.bind("storage_capsule", storage)
