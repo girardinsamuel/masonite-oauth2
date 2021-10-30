@@ -17,7 +17,7 @@ from masonite.providers import (
 from masoniteorm.providers import ORMProvider
 
 # register local package
-from src.masonite.socialite import SocialiteProvider
+from src.masonite.oauth import OAuthProvider
 
 PROVIDERS = [
     FrameworkProvider,
@@ -35,5 +35,5 @@ PROVIDERS = [
     BroadcastProvider,
     AuthenticationProvider,
     ORMProvider,
-    SocialiteProvider,
+    OAuthProvider,
 ]

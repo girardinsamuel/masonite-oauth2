@@ -14,7 +14,6 @@ setup(
         "masonite.oauth.config",
         "masonite.oauth.drivers",
         "masonite.oauth.providers",
-        "masonite.oauth.controllers",
         "masonite.oauth.commands",
     ],
     package_dir={"": "src"},
