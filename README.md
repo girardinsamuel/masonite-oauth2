@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://banners.beyondco.de/Masonite%20OAuth2.png?theme=light&packageManager=pip+install&packageName=masonite-oauth&pattern=topography&style=style_1&description=Social%20authentication%20for%20your%20apps%20(OAuth%202)&md=1&showWatermark=1&fontSize=100px&images=https%3A%2F%2Fgblobscdn.gitbook.com%2Fspaces%2F-L9uc-9XAlqhXkBwrLMA%2Favatar.png">
+    <img src="https://banners.beyondco.de/Masonite%20OAuth2.png?theme=light&packageManager=pip+install&packageName=masonite-oauth2&pattern=topography&style=style_1&description=Social%20authentication%20for%20your%20apps%20(OAuth%202)&md=1&showWatermark=1&fontSize=100px&images=https%3A%2F%2Fgblobscdn.gitbook.com%2Fspaces%2F-L9uc-9XAlqhXkBwrLMA%2Favatar.png">
 </p>
 <p align="center">
   <a href="https://docs.masoniteproject.com">
@@ -33,7 +33,7 @@ Also be sure to join the [Slack channel](http://slack.masoniteproject.com/)!
 ## Installation
 
 ```bash
-pip install masonite-oauth
+pip install masonite-oauth2
 ```
 
 ## Configuration
