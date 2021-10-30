@@ -161,7 +161,7 @@ Feel free to open a PR to add a new OAuth 2.0 provider 😀 !
 
 ## Credits
 
-Based on non maintained package https://github.com/hellomasonite/masonite-oauth.
+Based on non maintained package https://github.com/hellomasonite/masonite-socialite.
 
 ## License
 
