@@ -4,25 +4,25 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="masonite-socialite",
+    name="masonite-oauth",
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="1.0.0-beta",
+    version="1.0.0",
     packages=[
-        "masonite.socialite",
-        "masonite.socialite.config",
-        "masonite.socialite.drivers",
-        "masonite.socialite.providers",
-        "masonite.socialite.controllers",
-        "masonite.socialite.commands",
+        "masonite.oauth",
+        "masonite.oauth.config",
+        "masonite.oauth.drivers",
+        "masonite.oauth.providers",
+        "masonite.oauth.controllers",
+        "masonite.oauth.commands",
     ],
     package_dir={"": "src"},
     description="Social authentication for your apps (OAuth 2)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     # The project's main homepage.
-    url="https://github.com/girardinsamuel/masonite-socialite",
+    url="https://github.com/girardinsamuel/masonite-oauth",
     # Author details
     author="Samuel Girardin",
     author_email="sam@masoniteproject.com",

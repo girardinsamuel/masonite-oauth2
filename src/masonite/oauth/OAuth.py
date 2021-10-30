@@ -1,4 +1,4 @@
-class Socialite:
+class OAuth:
     def __init__(self, application, driver_config=None):
         self.application = application
         self.drivers = {}

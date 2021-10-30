@@ -1,18 +1,18 @@
-import os
-
-from masonite.foundation import response_handler
-from masonite.storage import StorageCapsule
 from masonite.auth import Sign
+from masonite.configuration import config
+from masonite.configuration.Configuration import Configuration
 from masonite.environment import LoadEnvironment
-from masonite.utils.structures import load
+from masonite.foundation import response_handler
 from masonite.middleware import (
-    SessionMiddleware,
     EncryptCookies,
     LoadUserMiddleware,
+    SessionMiddleware,
+    VerifyCsrfToken,
 )
 from masonite.routes import Route
-from masonite.configuration.Configuration import Configuration
-from masonite.configuration.helpers import config
+from masonite.storage import StorageCapsule
+from masonite.utils.location import base_path
+from masonite.utils.structures import load
 
 
 class Kernel:
@@ -20,7 +20,7 @@ class Kernel:
     http_middleware = [EncryptCookies]
 
     route_middleware = {
-        "web": [SessionMiddleware, LoadUserMiddleware],
+        "web": [SessionMiddleware, LoadUserMiddleware, VerifyCsrfToken],
     }
 
     def __init__(self, app):
@@ -39,23 +39,17 @@ class Kernel:
     def load_environment(self):
         LoadEnvironment()
 
-    def register_routes(self):
-        Route.set_controller_module_location(self.application.make("controller.location"))
-        self.application.make("router").add(
-            Route.group(load("tests/integrations/web", "ROUTES", []), middleware=["web"])
-        )
-
-    def register_middleware(self):
-        self.application.make("middleware").add(self.route_middleware).add(self.http_middleware)
-
     def register_configurations(self):
         # load configuration
         self.application.bind("config.location", "tests/integrations/config")
         configuration = Configuration(self.application)
         configuration.load()
         self.application.bind("config", configuration)
+        key = config("application.key")
+        self.application.bind("key", key)
+        self.application.bind("sign", Sign(key))
         # set locations
-        self.application.bind("controller.location", "tests/integrations/controllers")
+        self.application.bind("controllers.location", "tests/integrations/controllers")
         self.application.bind("jobs.location", "tests/integrations/jobs")
         self.application.bind("providers.location", "tests/integrations/providers")
         self.application.bind("mailables.location", "tests/integrations/mailables")
@@ -66,12 +60,19 @@ class Kernel:
         self.application.bind("tasks.location", "tests/integrations/tasks")
 
         self.application.bind("server.runner", "masonite.commands.ServeCommand.main")
-        key = config("application.key")
-        self.application.bind("key", key)
-        self.application.bind("sign", Sign(key))
 
-    def register_templates(self):
-        self.application.bind("views.location", "tests/integrations/templates/")
+    def register_middleware(self):
+        self.application.make("middleware").add(self.route_middleware).add(self.http_middleware)
+
+    def register_routes(self):
+        Route.set_controller_locations(self.application.make("controllers.location"))
+        self.application.bind("routes.location", "tests/integrations/routes/web")
+        self.application.make("router").add(
+            Route.group(
+                load(self.application.make("routes.location"), "ROUTES"),
+                middleware=["web"],
+            )
+        )
 
     def register_database(self):
         from masoniteorm.query import QueryBuilder
@@ -84,22 +85,23 @@ class Kernel:
         self.application.bind("migrations.location", "tests/integrations/databases/migrations")
         self.application.bind("seeds.location", "tests/integrations/databases/seeds")
 
-        from config.database import DB
+        self.application.bind("resolver", config("database.db"))
 
-        self.application.bind("resolver", DB)
+    def register_templates(self):
+        self.application.bind("views.location", "tests/integrations/templates")
 
     def register_storage(self):
-        storage = StorageCapsule(self.application.base_path)
+        storage = StorageCapsule()
         storage.add_storage_assets(
             {
                 # folder          # template alias
-                "storage/static": "static/",
-                "storage/compiled": "static/",
-                "storage/uploads": "static/",
-                "storage/public": "/",
+                "tests/integrations/storage/static": "static/",
+                "tests/integrations/storage/compiled": "static/",
+                "tests/integrations/storage/uploads": "static/",
+                "tests/integrations/storage/public": "/",
             }
         )
         self.application.bind("storage_capsule", storage)
 
         self.application.set_response_handler(response_handler)
-        self.application.use_storage_path(os.path.join(self.application.base_path, "storage"))
+        self.application.use_storage_path(base_path("storage"))

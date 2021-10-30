@@ -10,7 +10,7 @@ class InstallCommand(Command):
     """
     Publish config file
 
-    socialite:install
+    oauth:install
     """
 
     def handle(self):

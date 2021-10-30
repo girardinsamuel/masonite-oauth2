@@ -1,7 +1,7 @@
 from urllib.parse import parse_qs, urlparse
 from masonite.routes import Route
 from masonite.tests import TestCase
-from src.masonite.socialite import Socialite
+from src.masonite.oauth import OAuth
 
 
 class TestMethods(TestCase):
@@ -13,17 +13,17 @@ class TestMethods(TestCase):
         )
 
     def test_scopes(self):
-        driver = Socialite.driver("github").scopes(["test:a"])
+        driver = OAuth.driver("github").scopes(["test:a"])
         assert driver._scopes == ["user:email", "test:a"]
-        Socialite.driver("github").reset_scopes()
+        OAuth.driver("github").reset_scopes()
 
     def test_set_scopes(self):
-        driver = Socialite.driver("github").set_scopes(["test:a"])
+        driver = OAuth.driver("github").set_scopes(["test:a"])
         assert driver._scopes == ["test:a"]
-        Socialite.driver("github").reset_scopes()
+        OAuth.driver("github").reset_scopes()
 
     def test_with_data(self):
-        driver = Socialite.driver("github").with_data({"user": "test"})
+        driver = OAuth.driver("github").with_data({"user": "test"})
         assert driver._data == {"user": "test"}
 
     def test_request_with_additional_data(self):
@@ -42,4 +42,4 @@ class TestMethods(TestCase):
         scopes = redirect_params.get("scope")[0]
         assert "user:email" in scopes
         assert "admin:org" in scopes
-        Socialite.driver("github").reset_scopes()
+        OAuth.driver("github").reset_scopes()
