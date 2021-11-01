@@ -13,6 +13,7 @@ from masonite.providers import (
     HelpersProvider,
     BroadcastProvider,
     AuthenticationProvider,
+    AuthorizationProvider,
 )
 from masoniteorm.providers import ORMProvider
 
@@ -34,6 +35,7 @@ PROVIDERS = [
     StorageProvider,
     BroadcastProvider,
     AuthenticationProvider,
+    AuthorizationProvider,
     ORMProvider,
     OAuthProvider,
 ]
