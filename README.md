@@ -38,7 +38,7 @@ pip install masonite-oauth2
 
 ## Configuration
 
-Add oauthProvider to your project in `config/providers.py`:
+Add OauthProvider to your project in `config/providers.py`:
 
 ```python
 # config/providers.py
@@ -54,10 +54,10 @@ PROVIDERS = [
 ]
 ```
 
-Then install OR publish the configuration file:
+Then you can publish the configuration file to your project:
 
 ```bash
-python craft oauth:install
+python craft package:publish oauth
 ```
 
 Finally you will need to add credentials for the OAuth providers your application utilizes.
