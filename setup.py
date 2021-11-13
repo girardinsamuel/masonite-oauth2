@@ -14,7 +14,6 @@ setup(
         "masonite.oauth.config",
         "masonite.oauth.drivers",
         "masonite.oauth.providers",
-        "masonite.oauth.commands",
     ],
     package_dir={"": "src"},
     description="Social authentication for your apps (OAuth 2)",

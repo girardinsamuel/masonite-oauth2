@@ -1,7 +1,6 @@
 """A SocialiteProvider Service Provider."""
-from masonite.providers import Provider
 from masonite.configuration import config
-from masonite.facades import Config
+from masonite.packages import PackageProvider
 
 from ..OAuth import OAuth
 from ..drivers import (
@@ -12,19 +11,13 @@ from ..drivers import (
     AppleDriver,
     FacebookDriver,
 )
-from ..commands import InstallCommand
 
 
-class OAuthProvider(Provider):
-    """Provides Services To The Service Container."""
+class OAuthProvider(PackageProvider):
+    """ServiceProvider for OAuth package"""
 
-    def __init__(self, app):
-        self.application = app
-
-    def register(self):
-        """Register objects into the Service Container."""
-        self.application.make("commands").add(InstallCommand())
-        Config.merge_with("oauth", "masonite.oauth.config.oauth")
+    def configure(self):
+        (self.root("src/masonite/oauth").name("oauth").config("config/oauth.py", publish=True))
 
         oauth = OAuth(self.application).set_configuration(config("oauth.drivers"))
         oauth.add_driver("github", GithubDriver(self.application))
