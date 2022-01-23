@@ -55,6 +55,7 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: WSGI",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Topic :: Software Development :: Libraries :: Python Modules",
+        "Framework :: Masonite",
     ],
     # What does your project relate to?
     keywords="Masonite, Python, Development",
