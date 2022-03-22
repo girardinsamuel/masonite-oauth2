@@ -17,7 +17,7 @@ class OAuthProvider(PackageProvider):
     """ServiceProvider for OAuth package"""
 
     def configure(self):
-        (self.root("src/masonite/oauth").name("oauth").config("config/oauth.py", publish=True))
+        (self.root("masonite/oauth").name("oauth").config("config/oauth.py", publish=True))
 
         oauth = OAuth(self.application).set_configuration(config("oauth.drivers"))
         oauth.add_driver("github", GithubDriver(self.application))
