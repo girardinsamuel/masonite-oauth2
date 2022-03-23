@@ -1,4 +1,3 @@
-import pytest
 import requests
 from urllib.parse import urlparse, parse_qs
 from masonite.tests import TestCase
@@ -80,7 +79,6 @@ class TestProviders(TestCase):
         assert redirect_uri == "http://localhost:8000/auth/callback/bitbucket"
         response.assertSessionHas("state", state)
 
-    @pytest.mark.skip("Facebook redirect url has a temporary error...")
     def test_facebook(self):
         response = self.get("/auth/redirect/facebook").assertRedirect()
         redirect_url = response.response.header("Location")

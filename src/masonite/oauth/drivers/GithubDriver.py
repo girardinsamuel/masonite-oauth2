@@ -37,40 +37,47 @@ class GithubDriver(BaseDriver):
                     break
         return email
 
-    def user(self):
-        user_data, token = super().user()
-        # fetch email if possible
-        email = self.get_email_by_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["id"],
-                    "nickname": user_data["login"],
-                    "name": user_data["name"],
-                    "email": user_data["email"] or email,
-                    "avatar": user_data["avatar_url"],
-                }
-            )
-        )
-        return user
+    def map_user_data(self, data):
+        return {
+            "id": data["id"],
+            "nickname": data["login"],
+            "name": data["name"],
+            "email": data["email"],
+            "avatar": data["avatar_url"],
+        }
 
-    def user_from_token(self, token):
-        user_data = super().user_from_token(token)
-        # fetch email if possible
-        email = self.get_email_by_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["id"],
-                    "nickname": user_data["login"],
-                    "name": user_data["name"],
-                    "email": user_data["email"] or email,
-                    "avatar": user_data["avatar_url"],
-                }
-            )
+    def revoke(self, token):
+        # https://docs.github.com/en/rest/reference/apps#delete-an-app-token"
+        response = self.perform_basic_request(
+            "delete",
+            f"https://api.github.com/applications/{self.options.get('client_id')}/grant",
+            json={"access_token": token},
+            headers={"Accept": "application/vnd.github.v3+json"},
         )
+        if response.status_code == 204:
+            return True
+        else:
+            return False
+
+    def user(self) -> "OAuthUser":
+        """
+        GitHub Oauth2 mechanism does not provide refresh token info from OAuth flow, a subsequent
+        request needs to be done.
+        https://docs.github.com/en/rest/reference/apps#check-a-token
+        """
+
+        if self.has_invalid_state():
+            raise Exception("Invalid state")
+        data = self.get_token()
+        token = data.get("access_token")
+        user = self.user_from_token(token)
+
+        response = self.perform_basic_request(
+            "post",
+            f"https://api.github.com/applications/{self.options.get('client_id')}/token",
+            json={"access_token": token},
+            headers={"Accept": "application/vnd.github.v3+json"},
+        )
+        full_data = response.json()
+        user.set_expires_in(full_data.get("expires_at"))
         return user

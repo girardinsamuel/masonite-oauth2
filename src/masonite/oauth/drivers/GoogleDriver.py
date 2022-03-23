@@ -1,5 +1,6 @@
+import requests
+
 from .BaseDriver import BaseDriver
-from ..OAuthUser import OAuthUser
 
 
 class GoogleDriver(BaseDriver):
@@ -21,36 +22,22 @@ class GoogleDriver(BaseDriver):
             "query": {"prettyPrint": "false"},
         }
 
-    def user(self):
-        user_data, token = super().user()
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["sub"],
-                    "nickname": user_data["nickname"],
-                    "name": user_data["name"],
-                    "email": user_data["email"],
-                    "avatar": user_data["picture"],
-                }
-            )
-        )
-        return user
+    def map_user_data(self, data):
+        return {
+            "id": data["sub"],
+            "nickname": data["nickname"],
+            "name": data["name"],
+            "email": data["email"],
+            "avatar": data["picture"],
+        }
 
-    def user_from_token(self, token):
-        user_data = super().user_from_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["sub"],
-                    "nickname": user_data["nickname"],
-                    "name": user_data["name"],
-                    "email": user_data["email"],
-                    "avatar": user_data["picture"],
-                }
-            )
+    def revoke(self, token):
+        # https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow#oauth-2.0-endpoints_6
+        response = requests.post(
+            f"https://oauth2.googleapis.com/revoke?token={token}",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
-        return user
+        if response.status_code == 200:
+            return True
+        else:
+            return False

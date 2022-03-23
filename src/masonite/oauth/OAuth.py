@@ -12,7 +12,11 @@ class OAuth:
         return self
 
     def driver(self, name):
-        return self.drivers[name].set_options(self.get_config_options(name))
+        try:
+            selected_driver = self.drivers[name]
+        except KeyError:
+            raise Exception(f"The driver {name} has not been registered as an OAuth driver.")
+        return selected_driver.set_options(self.get_config_options(name))
 
     def get_config_options(self, driver=None):
         if driver is None:

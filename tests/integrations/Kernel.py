@@ -58,6 +58,7 @@ class Kernel:
         self.application.bind("notifications.location", "tests/integrations/notifications")
         self.application.bind("events.location", "tests/integrations/events")
         self.application.bind("tasks.location", "tests/integrations/tasks")
+        self.application.bind("models.location", "tests/integrations/app")
 
         self.application.bind("server.runner", "masonite.commands.ServeCommand.main")
 

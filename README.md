@@ -75,6 +75,16 @@ DRIVERS = {
 
 `redirect` can be a route name or a path.
 
+## Configuration of your OAuth app:
+
+Then you should create an OAuth App on your provider dashboard. Here are some links:
+
+- GitHub:
+- GitLab:
+- BitBucket (Atlassian): you must first [create a workspace](https://bitbucket.org/account/workspaces/) and then in `Settings` add an `OAuth consumer` here https://bitbucket.org/{your-workspace-slug}/workspace/settings/api
+- ...
+
+
 ## Usage
 
 To authenticate users using an OAuth provider, you will need two routes: one for redirecting the user to the OAuth provider, and another for receiving the callback from the provider after authentication.
@@ -149,6 +159,27 @@ Some OAuth providers support optional parameters. To include those in the redire
 ```python
 return OAuth.driver("github").with_data({"key": "value"})
 ```
+
+### Refresh token
+
+Some OAuth providers support refreshing token (GitLab, BitBucket and Google at least). For that
+you need a `refresh_token` obtained when calling `user()`:
+
+```python
+new_user =  OAuth.driver("gitlab").refresh(user.refresh_token)
+new_user.token #== is a new token
+```
+
+### Revoke token programmatically
+
+Some OAuth providers support revoking token programmatically. For that
+you need to pass the token to the `revoke()` method:
+
+```python
+revoked = OAuth.driver("gitlab").revoke(token)
+```
+
+It returned a boolean to tell if it was successful or not.
 
 ## Contributing
 

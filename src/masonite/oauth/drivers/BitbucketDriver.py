@@ -1,8 +1,13 @@
 from .BaseDriver import BaseDriver
-from ..OAuthUser import OAuthUser
 
 
 class BitbucketDriver(BaseDriver):
+    """
+    doc
+    https://confluence.atlassian.com/bitbucketserver/bitbucket-oauth-2-0-provider-api-1108483661.html
+    https://developer.atlassian.com/cloud/bitbucket/oauth-2/
+    """
+
     def get_default_scopes(self):
         # https://developer.atlassian.com/cloud/bitbucket/bitbucket-cloud-rest-api-scopes/
         return ["email"]
@@ -22,24 +27,6 @@ class BitbucketDriver(BaseDriver):
     def get_request_options(self, token):
         return {"headers": {"Authorization": f"Bearer {token}"}}
 
-    def user(self):
-        user_data, token = super().user()
-        email = self.get_email_by_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["uuid"],
-                    "nickname": user_data["username"],
-                    "name": user_data["display_name"],
-                    "email": user_data.get("email", "") or email,
-                    "avatar": user_data["links"]["avatar"]["href"],
-                }
-            )
-        )
-        return user
-
     def get_email_by_token(self, token):
         email = ""
         if self.has_scope("email"):
@@ -53,21 +40,23 @@ class BitbucketDriver(BaseDriver):
                     email = email_data["email"]
         return email
 
-    def user_from_token(self, token):
-        user_data = super().user_from_token(token)
-        # fetch email if possible
-        email = self.get_email_by_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["uuid"],
-                    "nickname": user_data["username"],
-                    "name": user_data["display_name"],
-                    "email": user_data.get("email", "") or email,
-                    "avatar": user_data["links"]["avatar"]["href"],
-                }
-            )
+    def map_user_data(self, data):
+        return {
+            "id": data["uuid"],
+            "nickname": data["username"],
+            "name": data["display_name"],
+            "email": data.get("email", ""),
+            "avatar": data["links"]["avatar"]["href"],
+        }
+
+    def revoke(self, token):
+        response = self.perform_basic_request(
+            "post",
+            "https://bitbucket.org/site/oauth2/revoke",
+            json={"token": token},
+            headers={"Accept": "application/json"},
         )
-        return user
+        if response.status_code == 200:
+            return True
+        else:
+            return False

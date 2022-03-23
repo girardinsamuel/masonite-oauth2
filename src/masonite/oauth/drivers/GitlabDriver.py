@@ -1,5 +1,4 @@
 from .BaseDriver import BaseDriver
-from ..OAuthUser import OAuthUser
 
 
 class GitlabDriver(BaseDriver):
@@ -12,42 +11,33 @@ class GitlabDriver(BaseDriver):
     def get_token_url(self):
         return "https://gitlab.com/oauth/token"
 
+    def get_email_url(self):
+        return ""
+
     def get_user_url(self):
         return "https://gitlab.com/api/v4/user"
 
     def get_request_options(self, token):
         return {"headers": {"Authorization": f"Bearer {token}"}}
 
-    def user(self):
-        user_data, token = super().user()
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["id"],
-                    "nickname": user_data["username"],
-                    "name": user_data["name"],
-                    "email": user_data["email"],
-                    "avatar": user_data["avatar_url"],
-                }
-            )
-        )
-        return user
+    def map_user_data(self, data):
+        return {
+            "id": data["id"],
+            "nickname": data["username"],
+            "name": data["name"],
+            "email": data["email"],
+            "avatar": data["avatar_url"],
+        }
 
-    def user_from_token(self, token):
-        user_data = super().user_from_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["id"],
-                    "nickname": user_data["username"],
-                    "name": user_data["name"],
-                    "email": user_data["email"],
-                    "avatar": user_data["avatar_url"],
-                }
-            )
+    def revoke(self, token):
+        # https://docs.gitlab.com/ee/api/oauth2.html#revoke-a-token
+        response = self.perform_basic_request(
+            "post",
+            "https://gitlab.com/oauth/revoke",
+            json={"token": token},
+            headers={"Accept": "application/json"},
         )
-        return user
+        if response.status_code == 200:
+            return True
+        else:
+            return False
