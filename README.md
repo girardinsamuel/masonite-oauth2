@@ -160,6 +160,27 @@ Some OAuth providers support optional parameters. To include those in the redire
 return OAuth.driver("github").with_data({"key": "value"})
 ```
 
+### Refresh token
+
+Some OAuth providers support refreshing token (GitLab, BitBucket and Google at least). For that
+you need a `refresh_token` obtained when calling `user()`:
+
+```python
+new_user =  OAuth.driver("gitlab").refresh(user.refresh_token)
+new_user.token #== is a new token
+```
+
+### Revoke token programmatically
+
+Some OAuth providers support revoking token programmatically. For that
+you need to pass the token to the `revoke()` method:
+
+```python
+revoked = OAuth.driver("gitlab").revoke(token)
+```
+
+It returned a boolean to tell if it was successful or not.
+
 ## Contributing
 
 Please read the [Contributing Documentation](CONTRIBUTING.md) here.
