@@ -1,9 +1,12 @@
 import requests
-import json
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
-from requests_oauthlib import OAuth2Session
 from masonite.exceptions import RouteNotFoundException
 from masonite.facades import Url
+from masonite.utils.str import random_string
+
+if TYPE_CHECKING:
+        from ..OAuthUser import OAuthUser
 
 
 class BaseDriver:
@@ -14,6 +17,7 @@ class BaseDriver:
         self._is_stateless = False
         self._scopes = self.get_default_scopes()
         self._data = {}
+        self._scope_separator = ","
 
     def set_options(self, options):
         self.options = options
@@ -30,37 +34,75 @@ class BaseDriver:
             redirect_url = redirect_route_or_url
         return Url.url(redirect_url)
 
-    def get_client(self):
-        self._scopes.sort()
-        return OAuth2Session(
-            client_id=self.options.get("client_id"),
-            redirect_uri=self.get_absolute_redirect_uri(),
-            scope=self._scopes,
-        )
+    # def get_client(self):
+    #     self._scopes.sort()
+    #     return OAuth2Session(
+    #         client_id=self.options.get("client_id"),
+    #         redirect_uri=self.get_absolute_redirect_uri(),
+    #         scope=self._scopes,
+    #     )
+
+    def get_auth_params(self, state=None):
+        params = {
+            "client_id": self.options.get("client_id"),
+            "redirect_uri": self.get_absolute_redirect_uri(),
+            "scope": self.format_scopes(),
+            "response_type": "code"
+        }
+        if self.use_state():
+            params["state"] = state
+        # add custom params
+        params.update(self._data)
+
+        return params
+
+    def build_auth_url(self, state):
+        params = self.get_auth_params(state)
+        base_url = self.get_auth_url()
+        query = urlencode(params)
+        return f"{base_url}?{query}"
 
     def redirect(self):
-        client = self.get_client()
-        authorization_url, state = client.authorization_url(self.get_auth_url())
-        # add optional parameters
-        authorization_url += "&" + urlencode(self._data)
-        # self.application.make("session").set("state", state)
-        self.application.make("request").session.set("state", state)
+        state = None
+
+        if self.use_state():
+            state = self.get_state()
+            # self.application.make("session").set("state", state)
+            self.application.make("request").session.set("state", state)
+
+        authorization_url = self.build_auth_url(state)
+
         return self.application.make("response").redirect(location=authorization_url)
+
+    def get_token_fields(self, code):
+        fields = {
+            "grant_type": "authorization_code",
+            "client_id": self.options.get("client_id"),
+            "client_secret": self.options.get("client_secret"),
+            "code": code,
+            "redirect_uri": self.get_absolute_redirect_uri(),
+        }
+        return fields
 
     def get_token(self):
         code = self.application.make("request").input("code")
-        client = self.get_client()
-        response = client.fetch_token(
-            self.get_token_url(),
-            client_secret=self.options.get("client_secret"),
-            code=code,
-        )
-        token = response.get("access_token")
-        return client, token
+        data = self.get_token_fields(code)
+        response = requests.post(self.get_token_url(), data, headers={"Accept": "application/json"})
+        if response.status_code != 200:
+            raise Exception("error")
+        data = response.json()
+        token = data.get("access_token")
+        return token
 
     def stateless(self):
         self._is_stateless = True
         return self
+
+    def use_state(self):
+        return not self._is_stateless
+
+    def get_state(self):
+        return random_string(40)
 
     def scopes(self, scopes_list):
         self._scopes.extend(scopes_list)
@@ -72,6 +114,13 @@ class BaseDriver:
 
     def has_scope(self, scope):
         return scope in self._scopes
+
+    def format_scopes(self):
+        self._scopes = list(set(self._scopes))
+        # order list of scopes alphabetically
+        self._scopes.sort()
+        #
+        return self._scope_separator.join(self._scopes)
 
     def with_data(self, data):
         """Add optional parameters in the redirect request that the provider might support.
@@ -86,7 +135,7 @@ class BaseDriver:
         state = self.application.make("request").session.get("state")
         return state != self.application.make("request").input("state")
 
-    def get_default_scopes(self):
+    def get_default_scopes(self) -> list:
         return []
 
     def reset_scopes(self):
@@ -107,22 +156,28 @@ class BaseDriver:
     def get_request_options(self, *args):
         raise NotImplementedError()
 
+    def map_user_data(self, data) -> "OAuthUser":
+        raise NotImplementedError()
+
     def get_email_by_token(self, token):
         """E-mail is often not send directly with user info, a subsequent request needs to be
         made in order to fetch user e-mail (if scopes allow it)."""
         response = requests.get(self.get_email_url(), **self.get_request_options(token))
-        email_data = json.loads(response.content.decode("utf-8"))
-        return email_data
+        return response.json()
 
     def user(self):
-        # if self.has_invalid_state():
-        #     raise Exception("Invalid state")
-        client, token = self.get_token()
-        response = client.get(self.get_user_url())
-        user_data = json.loads(response.content.decode("utf-8"))
-        return user_data, token
+        if self.has_invalid_state():
+            raise Exception("Invalid state")
+        token = self.get_token()
+        user = self.user_from_token(token)
+
+        return user
 
     def user_from_token(self, token):
         response = requests.get(self.get_user_url(), **self.get_request_options(token))
-        user_data = json.loads(response.content.decode("utf-8"))
-        return user_data
+        data = response.json()
+        email = self.get_email_by_token(token)
+        user = self.map_user_data({**data, "email": email})
+        user.set_token(token)
+        return user
+

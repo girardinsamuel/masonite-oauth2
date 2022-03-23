@@ -37,40 +37,13 @@ class GithubDriver(BaseDriver):
                     break
         return email
 
-    def user(self):
-        user_data, token = super().user()
-        # fetch email if possible
-        email = self.get_email_by_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
+    def map_user_data(self, data):
+        return OAuthUser().build(
                 {
-                    "id": user_data["id"],
-                    "nickname": user_data["login"],
-                    "name": user_data["name"],
-                    "email": user_data["email"] or email,
-                    "avatar": user_data["avatar_url"],
+                    "id": data["id"],
+                    "nickname": data["login"],
+                    "name": data["name"],
+                    "email": data["email"],
+                    "avatar": data["avatar_url"],
                 }
             )
-        )
-        return user
-
-    def user_from_token(self, token):
-        user_data = super().user_from_token(token)
-        # fetch email if possible
-        email = self.get_email_by_token(token)
-        user = (
-            OAuthUser()
-            .set_token(token)
-            .build(
-                {
-                    "id": user_data["id"],
-                    "nickname": user_data["login"],
-                    "name": user_data["name"],
-                    "email": user_data["email"] or email,
-                    "avatar": user_data["avatar_url"],
-                }
-            )
-        )
-        return user
