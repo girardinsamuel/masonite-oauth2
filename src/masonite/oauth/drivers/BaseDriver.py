@@ -1,12 +1,11 @@
 import requests
-from typing import TYPE_CHECKING
 from urllib.parse import urlencode
+
 from masonite.exceptions import RouteNotFoundException
 from masonite.facades import Url
 from masonite.utils.str import random_string
 
-if TYPE_CHECKING:
-        from ..OAuthUser import OAuthUser
+from ..OAuthUser import OAuthUser
 
 
 class BaseDriver:
@@ -34,20 +33,12 @@ class BaseDriver:
             redirect_url = redirect_route_or_url
         return Url.url(redirect_url)
 
-    # def get_client(self):
-    #     self._scopes.sort()
-    #     return OAuth2Session(
-    #         client_id=self.options.get("client_id"),
-    #         redirect_uri=self.get_absolute_redirect_uri(),
-    #         scope=self._scopes,
-    #     )
-
     def get_auth_params(self, state=None):
         params = {
             "client_id": self.options.get("client_id"),
             "redirect_uri": self.get_absolute_redirect_uri(),
             "scope": self.format_scopes(),
-            "response_type": "code"
+            "response_type": "code",
         }
         if self.use_state():
             params["state"] = state
@@ -62,14 +53,14 @@ class BaseDriver:
         query = urlencode(params)
         return f"{base_url}?{query}"
 
-    def redirect(self):
-        state = None
-
+    def redirect(self, state=None):
         if self.use_state():
-            state = self.get_state()
+            # let user provide their own generated state
+            state = state or self.get_state()
             # self.application.make("session").set("state", state)
             self.application.make("request").session.set("state", state)
-
+        else:
+            state = None
         authorization_url = self.build_auth_url(state)
 
         return self.application.make("response").redirect(location=authorization_url)
@@ -87,12 +78,13 @@ class BaseDriver:
     def get_token(self):
         code = self.application.make("request").input("code")
         data = self.get_token_fields(code)
-        response = requests.post(self.get_token_url(), data, headers={"Accept": "application/json"})
+        response = requests.post(
+            self.get_token_url(), data, headers={"Accept": "application/json"}
+        )
+        data = response.json()
         if response.status_code != 200:
             raise Exception("error")
-        data = response.json()
-        token = data.get("access_token")
-        return token
+        return data
 
     def stateless(self):
         self._is_stateless = True
@@ -131,7 +123,6 @@ class BaseDriver:
     def has_invalid_state(self):
         if self._is_stateless:
             return False
-        # state = self.application.make("session").get("state")
         state = self.application.make("request").session.get("state")
         return state != self.application.make("request").input("state")
 
@@ -147,6 +138,12 @@ class BaseDriver:
     def get_token_url(self):
         raise NotImplementedError()
 
+    def get_refresh_token_url(self):
+        return self.get_token_url()
+
+    def get_revoke_token_url(self):
+        raise NotImplementedError()
+
     def get_user_url(self):
         raise NotImplementedError()
 
@@ -159,25 +156,76 @@ class BaseDriver:
     def map_user_data(self, data) -> "OAuthUser":
         raise NotImplementedError()
 
+    def revoke(self, token) -> bool:
+        raise NotImplementedError()
+
     def get_email_by_token(self, token):
         """E-mail is often not send directly with user info, a subsequent request needs to be
         made in order to fetch user e-mail (if scopes allow it)."""
-        response = requests.get(self.get_email_url(), **self.get_request_options(token))
-        return response.json()
+        if self.get_email_url():
+            response = requests.get(self.get_email_url(), **self.get_request_options(token))
+            return response.json()
+        else:
+            return {}
 
-    def user(self):
+    def user(self) -> "OAuthUser":
         if self.has_invalid_state():
             raise Exception("Invalid state")
-        token = self.get_token()
+        data = self.get_token()
+        token = data.get("access_token")
         user = self.user_from_token(token)
-
+        user.set_refresh_token(data.get("refresh_token")).set_expires_in(data.get("expires_in"))
         return user
 
-    def user_from_token(self, token):
+    def user_from_token(self, token: str) -> "OAuthUser":
         response = requests.get(self.get_user_url(), **self.get_request_options(token))
         data = response.json()
+        if response.status_code != 200:
+            raise Exception("Provider API error")
         email = self.get_email_by_token(token)
-        user = self.map_user_data({**data, "email": email})
+        if email:
+            data.update({"email": email})
+        user = OAuthUser().build(self.map_user_data(data))
         user.set_token(token)
         return user
 
+    def refresh(self, refresh_token: str) -> "OAuthUser":
+        params = {
+            "client_id": self.options.get("client_id"),
+            "client_secret": self.options.get("client_secret"),
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+            "redirect_uri": self.get_absolute_redirect_uri(),
+        }
+        query = urlencode(params)
+        url = f"{self.get_refresh_token_url()}?{query}"
+        response = requests.post(url, headers={"Accept": "application/json"})
+        if response.status_code != 200:
+            raise Exception("Provider API error")
+        data = response.json()
+        token = data.get("access_token")
+        user = self.user_from_token(token)
+        user.set_refresh_token(data.get("refresh_token")).set_expires_in(data.get("expires_in"))
+        return user
+
+    def perform_request(self, token, method, url, **options):
+        """Perform an authenticated request to the API on behalf on the user to which the given
+        token belongs with the token as a 'Bearer' authentication token."""
+        request_options = {
+            **self.get_request_options(token),
+            **options,
+        }
+        response = requests.request(method, url, **request_options)
+        return response
+
+    def perform_basic_request(self, method, url, **options):
+        """Perform an authenticated request to the API on behalf on the user to which the given
+        token belongs with Basic HTTP authentication."""
+        request_options = {
+            "auth": requests.auth.HTTPBasicAuth(
+                self.options.get("client_id"), self.options.get("client_secret")
+            ),
+            **options,
+        }
+        response = requests.request(method, url, **request_options)
+        return response

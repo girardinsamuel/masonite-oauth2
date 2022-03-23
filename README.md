@@ -75,6 +75,16 @@ DRIVERS = {
 
 `redirect` can be a route name or a path.
 
+## Configuration of your OAuth app:
+
+Then you should create an OAuth App on your provider dashboard. Here are some links:
+
+- GitHub:
+- GitLab:
+- BitBucket (Atlassian): you must first [create a workspace](https://bitbucket.org/account/workspaces/) and then in `Settings` add an `OAuth consumer` here https://bitbucket.org/{your-workspace-slug}/workspace/settings/api
+- ...
+
+
 ## Usage
 
 To authenticate users using an OAuth provider, you will need two routes: one for redirecting the user to the OAuth provider, and another for receiving the callback from the provider after authentication.

@@ -38,12 +38,46 @@ class GithubDriver(BaseDriver):
         return email
 
     def map_user_data(self, data):
-        return OAuthUser().build(
-                {
-                    "id": data["id"],
-                    "nickname": data["login"],
-                    "name": data["name"],
-                    "email": data["email"],
-                    "avatar": data["avatar_url"],
-                }
-            )
+        return {
+            "id": data["id"],
+            "nickname": data["login"],
+            "name": data["name"],
+            "email": data["email"],
+            "avatar": data["avatar_url"],
+        }
+
+    def revoke(self, token):
+        # https://docs.github.com/en/rest/reference/apps#delete-an-app-token"
+        response = self.perform_basic_request(
+            "delete",
+            f"https://api.github.com/applications/{self.options.get('client_id')}/grant",
+            json={"access_token": token},
+            headers={"Accept": "application/vnd.github.v3+json"},
+        )
+        if response.status_code == 204:
+            return True
+        else:
+            return False
+
+    def user(self) -> "OAuthUser":
+        """
+        GitHub Oauth2 mechanism does not provide refresh token info from OAuth flow, a subsequent
+        request needs to be done.
+        https://docs.github.com/en/rest/reference/apps#check-a-token
+        """
+
+        if self.has_invalid_state():
+            raise Exception("Invalid state")
+        data = self.get_token()
+        token = data.get("access_token")
+        user = self.user_from_token(token)
+
+        response = self.perform_basic_request(
+            "post",
+            f"https://api.github.com/applications/{self.options.get('client_id')}/token",
+            json={"access_token": token},
+            headers={"Accept": "application/vnd.github.v3+json"},
+        )
+        full_data = response.json()
+        user.set_expires_in(full_data.get("expires_at"))
+        return user

@@ -1,3 +1,2 @@
 masonite>=4.0<5.0
 masonite-orm
-requests-oauthlib
