@@ -19,7 +19,7 @@ class GoogleDriver(BaseDriver):
     def get_request_options(self, token):
         return {
             "headers": {"Authorization": f"Bearer {token}", "Accept": "application/json"},
-            "query": {"prettyPrint": "false"},
+            "params": {"prettyPrint": "false"},
         }
 
     def map_user_data(self, data):
