@@ -5,7 +5,7 @@ from .BaseDriver import BaseDriver
 
 class GoogleDriver(BaseDriver):
     def get_default_scopes(self):
-        return ["profile"]
+        return ["https://www.googleapis.com/auth/userinfo.email", " https://www.googleapis.com/auth/userinfo.profile"]
 
     def get_auth_url(self):
         return "https://accounts.google.com/o/oauth2/auth"
@@ -19,15 +19,24 @@ class GoogleDriver(BaseDriver):
     def get_request_options(self, token):
         return {
             "headers": {"Authorization": f"Bearer {token}", "Accept": "application/json"},
-            "params": {"prettyPrint": "false"},
+            # "params": {"prettyPrint": "false"},
         }
+
+    def get_token_fields(self, code):
+        fields = super().get_token_fields(code)
+        fields.update({
+            "access_type": "offline",
+            "include_granted_scopes": "true",
+            "prompt": "consent"
+        })
+        return fields
 
     def map_user_data(self, data):
         return {
             "id": data["sub"],
-            "nickname": data["nickname"],
+            "nickname": data.get("nickname", ""),
             "name": data["name"],
-            "email": data["email"],
+            "email": data.get("email", ""),
             "avatar": data["picture"],
         }
 

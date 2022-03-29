@@ -78,6 +78,7 @@ class BaseDriver:
     def get_token(self):
         code = self.application.make("request").input("code")
         data = self.get_token_fields(code)
+        import pdb;pdb.set_trace()
         response = requests.post(
             self.get_token_url(), data, headers={"Accept": "application/json"}
         )
@@ -169,8 +170,8 @@ class BaseDriver:
             return {}
 
     def user(self) -> "OAuthUser":
-        if self.has_invalid_state():
-            raise Exception("Invalid state")
+        # if self.has_invalid_state():
+        #     raise Exception("Invalid state")
         data = self.get_token()
         token = data.get("access_token")
         user = self.user_from_token(token)
