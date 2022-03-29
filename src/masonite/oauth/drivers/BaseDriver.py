@@ -148,7 +148,7 @@ class BaseDriver:
         raise NotImplementedError()
 
     def get_email_url(self):
-        raise NotImplementedError()
+        return None
 
     def get_request_options(self, *args):
         raise NotImplementedError()
