@@ -9,6 +9,8 @@ from ..OAuthUser import OAuthUser
 
 
 class BaseDriver:
+    scope_separator = ","
+
     def __init__(self, application):
         self.application = application
         self.options = {}
@@ -16,7 +18,7 @@ class BaseDriver:
         self._is_stateless = False
         self._scopes = self.get_default_scopes()
         self._data = {}
-        self._scope_separator = ","
+        self._scope_separator = self.scope_separator
 
     def set_options(self, options):
         self.options = options

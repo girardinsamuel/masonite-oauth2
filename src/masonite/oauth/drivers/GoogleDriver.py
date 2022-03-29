@@ -4,8 +4,10 @@ from .BaseDriver import BaseDriver
 
 
 class GoogleDriver(BaseDriver):
+    scope_separator = " "
+
     def get_default_scopes(self):
-        return ["https://www.googleapis.com/auth/userinfo.email", " https://www.googleapis.com/auth/userinfo.profile"]
+        return ["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"]
 
     def get_auth_url(self):
         return "https://accounts.google.com/o/oauth2/auth"
@@ -19,7 +21,6 @@ class GoogleDriver(BaseDriver):
     def get_request_options(self, token):
         return {
             "headers": {"Authorization": f"Bearer {token}", "Accept": "application/json"},
-            # "params": {"prettyPrint": "false"},
         }
 
     def get_token_fields(self, code):
@@ -33,11 +34,11 @@ class GoogleDriver(BaseDriver):
 
     def map_user_data(self, data):
         return {
-            "id": data["sub"],
+            "id": data.get("sub", ""),
             "nickname": data.get("nickname", ""),
-            "name": data["name"],
+            "name": data.get("name", ""),
             "email": data.get("email", ""),
-            "avatar": data["picture"],
+            "avatar": data.get("picture", ""),
         }
 
     def revoke(self, token):
