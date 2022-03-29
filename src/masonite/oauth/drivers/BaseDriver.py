@@ -78,7 +78,6 @@ class BaseDriver:
     def get_token(self):
         code = self.application.make("request").input("code")
         data = self.get_token_fields(code)
-        import pdb;pdb.set_trace()
         response = requests.post(
             self.get_token_url(), data, headers={"Accept": "application/json"}
         )
