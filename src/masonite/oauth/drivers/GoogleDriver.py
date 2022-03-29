@@ -5,7 +5,7 @@ from .BaseDriver import BaseDriver
 
 class GoogleDriver(BaseDriver):
     def get_default_scopes(self):
-        return ["openid", "profile", "email"]
+        return ["profile"]
 
     def get_auth_url(self):
         return "https://accounts.google.com/o/oauth2/auth"
