@@ -1,16 +1,21 @@
-"""Cache Config"""
-import os
+from masonite.environment import env
+from masonite.utils.location import base_path
+
 
 DISKS = {
     "default": "local",
-    "local": {
-        "driver": "file",
-        "path": os.path.join(os.getcwd(), "tests/integrations/storage/uploads/"),
-    },
+    "local": {"driver": "file", "path": base_path("tests/integrations/storage/framework/filesystem")},
     "s3": {
         "driver": "s3",
-        "client": os.getenv("AWS_CLIENT"),
-        "secret": os.getenv("AWS_SECRET"),
-        "bucket": os.getenv("AWS_BUCKET"),
+        "client": env("S3_CLIENT"),
+        "secret": env("S3_SECRET"),
+        "bucket": env("S3_BUCKET"),
     },
+}
+
+STATICFILES = {
+    # folder          # template alias
+    "tests/integrations/storage/static": "static/",
+    "tests/integrations/storage/compiled": "assets/",
+    "tests/integrations/storage/public": "/",
 }
