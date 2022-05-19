@@ -7,7 +7,10 @@ class GoogleDriver(BaseDriver):
     scope_separator = " "
 
     def get_default_scopes(self):
-        return ["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"]
+        return [
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/userinfo.email",
+        ]
 
     def get_auth_url(self):
         return "https://accounts.google.com/o/oauth2/auth"
@@ -25,11 +28,9 @@ class GoogleDriver(BaseDriver):
 
     def get_token_fields(self, code):
         fields = super().get_token_fields(code)
-        fields.update({
-            "access_type": "offline",
-            "include_granted_scopes": "true",
-            "prompt": "consent"
-        })
+        fields.update(
+            {"access_type": "offline", "include_granted_scopes": "true", "prompt": "consent"}
+        )
         return fields
 
     def map_user_data(self, data):

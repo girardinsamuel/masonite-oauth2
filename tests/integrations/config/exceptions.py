@@ -12,13 +12,8 @@ OPTIONS = {
 HANDLERS = {
     "context": True,
     "dumps": True,
-    "solutions": {
-        "stackoverflow": False,
-        "possible_solutions": True
-    },
+    "solutions": {"stackoverflow": False, "possible_solutions": True},
     "recommendations": {
-        "packages_updates": {
-            "list": ["exceptionite", "masonite", "masonite-orm", "pytest"]
-        }
+        "packages_updates": {"list": ["exceptionite", "masonite", "masonite-orm", "pytest"]}
     },
 }
